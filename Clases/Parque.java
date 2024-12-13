@@ -1,78 +1,116 @@
 package Clases;
 
 import java.util.concurrent.*;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
-public class Parque {
+public class Parque implements Runnable {
 
-    private int cantPulseras = 25;
-    private int cantMolinetes = 5;
-    private Semaphore pulseras = new Semaphore(cantPulseras);
-    private Semaphore molinetes = new Semaphore(cantMolinetes);
-    // true -> abierto, false -> cerrado
-    private boolean estadoParque =true;
+    private Semaphore pulseras;
+    private Semaphore molinetes;
+    private Semaphore colectivo;
+    private boolean estadoParque; // true = abierto, false = cerrado
+    private final ReentrantLock lock = new ReentrantLock(); // Lock para sincronizar el estado del parque
+    private final Condition parqueAbierto = lock.newCondition(); // Condición para esperar a que el parque abra
+
+    public Parque(int cantPulseras, int cantMolinetes, boolean estadoParque) {
+        this.estadoParque = estadoParque;
+        this.pulseras = new Semaphore(cantPulseras);
+        this.molinetes = new Semaphore(cantMolinetes);
+        this.colectivo = new Semaphore(25);
+    }
 
     // Parque
     public void abrirParque() {
-        estadoParque = true;
-        System.out.println("El parque esta abierto");
+        lock.lock();
+        try {
+            estadoParque = true;
+            System.out.println("El parque está abierto");
+            parqueAbierto.signalAll(); // Notificar a los visitantes en espera
+        } finally {
+            lock.unlock();
+        }
     }
 
     public void cerrarParque() {
-        estadoParque = false;
-        System.out.println("El parque esta cerrado");
+        lock.lock();
+        try {
+            estadoParque = false;
+            System.out.println("El parque está cerrado");
+        } finally {
+            lock.unlock();
+        }
     }
 
-    public void simulacionEstadoParque() {
+    public boolean estadoParque() {
+        lock.lock();
         try {
-            Thread.sleep(60000);
-            cerrarParque();
-            Thread.sleep(60000);
-            abrirParque();
+            return estadoParque;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    // Simulación del estado del parque
+    public void run() {
+        while (true) {
+            try {
+                Thread.sleep(2000); // Abierto por 2 segundos
+                cerrarParque();
+                Thread.sleep(2000); // Cerrado por 2 segundos
+                abrirParque();
+            } catch (InterruptedException ex) {
+                System.out.println("Error al simular el estado del parque");
+                break;
+            }
+        }
+    }
+
+    public void subirColectivo(){
+        try {
+            
+            colectivo.acquire();
+            
         } catch (InterruptedException ex) {
-            System.out.println("Error al simular el estado del parque");
+            System.out.println("Error al subir al colectivo");
         }
     }
 
     // Visitante
-    public void tomarPulsera(int numVistante) {
+    public void tomarPulsera(int numVisitante) {
+        lock.lock();
         try {
-            if (estadoParque) {
-                System.out.println("El visitante " + numVistante + " esta esperando para tomar un pulsera");
-                pulseras.acquire();
-                System.out.println("El visintante " + numVistante + " tomo una pulsera");
-                // simulación
-                Thread.sleep(1000);
-            } else {
-                System.out.println("El visitante " + numVistante + " no pudo ingresar al parque porque esta cerrado");
+            // Esperar hasta que el parque esté abierto
+            while (!estadoParque) {
+                System.out.println("El visitante " + numVisitante + " está esperando a que el parque abra");
+                parqueAbierto.await();
             }
-
+            System.out.println("El visitante " + numVisitante + " está esperando para tomar una pulsera");
+            pulseras.acquire();
+            System.out.println("El visitante " + numVisitante + " tomó una pulsera");
         } catch (InterruptedException ex) {
             System.out.println("Error al ingresar al parque");
+        } finally {
+            lock.unlock();
         }
     }
 
-    public void pasarMolinetes(int numVistante) {
+    public void pasarMolinetes(int numVisitante) {
         try {
-            System.out.println("El visitante " + numVistante + " esta esperando para pasar los molinetes");
+            System.out.println("El visitante " + numVisitante + " está esperando para pasar los molinetes");
             molinetes.acquire();
-            System.out.println("El visitante " + numVistante + " paso por los molinetes");
-            // simulación
-            Thread.sleep(1000);
+            System.out.println("El visitante " + numVisitante + " pasó por los molinetes");
+            // Simulación
+            Thread.sleep(500);
             molinetes.release();
-            System.out.println("El visitante " + numVistante + " Ingreso al parque");
+            System.out.println("El visitante " + numVisitante + " ingresó al parque");
         } catch (InterruptedException ex) {
             System.out.println("Error al ingresar al parque");
         }
     }
 
-    public void salirDelParque(int numVistante) {
-        System.out.println("El visitante " + numVistante + " salio del parque");
+    public void salirDelParque(int numVisitante) {
+        System.out.println("El visitante " + numVisitante + " salió del parque");
         pulseras.release();
     }
-
-    // Visitante Bus
-    public void ingresarEstacionamiento() {
-
-    }
-
 }
