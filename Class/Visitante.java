@@ -1,8 +1,6 @@
 package Class;
 
 import java.util.Random;
-import Class.Colectivo;
-import Class.Parque;
 
 public class Visitante implements Runnable {
     private Parque parque;

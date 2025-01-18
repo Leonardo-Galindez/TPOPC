@@ -1,7 +1,6 @@
 package controller;
 
 import Class.Colectivo;
-import Class.Parque;
 
 public class ControlColectivo implements Runnable {
     private Colectivo colectivo;

@@ -28,7 +28,7 @@ public class Main {
         ScheduledExecutorService visitorScheduler = Executors.newScheduledThreadPool(1);
 
         for (int i = 1; i <= totalVisitantes; i++) {
-            final int visitanteId = i; // Variable final para capturar en la lambda
+            final int visitanteId = i;
             boolean enColectivo = new Random().nextInt(3) == 0; // 1/3 probabilidad de usar colectivo
             int delay = new Random().nextInt(500); // Tiempo aleatorio de llegada
             visitorScheduler.schedule(() -> {
