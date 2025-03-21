@@ -6,12 +6,11 @@ import controller.ControlColectivo;
 import controller.ControlParque;
 import java.util.concurrent.*;
 
-
 public class Main {
     public static void main(String[] args) {
         int cantPulseras = 20;
         int cantMolinetes = 5;
-        int capacidadColectivo = 10;
+        int capacidadColectivo = 25;
         int totalVisitantes = 30;
 
         Parque parque = new Parque(cantPulseras, cantMolinetes);

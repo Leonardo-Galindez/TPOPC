@@ -31,6 +31,7 @@ public class Parque {
     public void pasarMolinetes(int numVisitante) throws InterruptedException {
         molinetes.acquire();
         try {
+            System.err.println("cambios");
             System.out.println("Visitante " + numVisitante + " está pasando por el molinete.");
             Thread.sleep(1000);
         } finally {
